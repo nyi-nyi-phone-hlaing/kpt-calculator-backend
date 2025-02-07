@@ -39,9 +39,11 @@ router.delete(
 );
 
 router.post(
-  "/logout/userId/:userId/token/:token",
-  [isAuth, checkMongooseId("userId"), checkValidToken("token")],
+  "/logout/:id",
+  [isAuth, checkMongooseId("id")],
   authController.logout
 );
+
+router.get("/current-user", isAuth, authController.currentUser);
 
 module.exports = router;

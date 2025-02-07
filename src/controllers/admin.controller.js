@@ -1,6 +1,8 @@
 const User = require("../models/user.model");
 const Results = require("../models/result.model");
 const Customer = require("../models/customer.model");
+const dailyData = require("../utils/dailyData");
+const { Result } = require("express-validator");
 
 exports.getAllUsers = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
@@ -15,10 +17,17 @@ exports.getAllUsers = async (req, res) => {
 
     const totalUsers = await User.countDocuments({ role: "User" });
     const totalPages = Math.ceil(totalUsers / limit);
+    const currentPage = page;
 
-    return res
-      .status(200)
-      .json({ users, totalPages, totalUsers, status: "success", code: 200 });
+    return res.status(200).json({
+      users,
+      totalPages,
+      totalUsers,
+      currentPage,
+      message: "Getting all users successfully.",
+      status: "success",
+      code: 200,
+    });
   } catch (error) {
     return res
       .status(500)
@@ -67,9 +76,12 @@ exports.getDashboardData = async (req, res) => {
       totalNetwork,
     };
 
-    return res
-      .status(200)
-      .json({ dashboardData, status: "success", code: 200 });
+    return res.status(200).json({
+      dashboardData,
+      message: "Getting dashboard data successfully.",
+      status: "success",
+      code: 200,
+    });
   } catch (error) {
     return res
       .status(500)
@@ -95,7 +107,7 @@ exports.getAllResults = async (req, res) => {
       totalResults,
       status: "success",
       code: 200,
-      message: "Results",
+      message: "Getting all results successfully.",
     });
   } catch (error) {
     return res
@@ -115,18 +127,74 @@ exports.getAllCustomers = async (req, res) => {
 
     const totalCustomers = await Customer.countDocuments({});
     const totalPages = Math.ceil(totalCustomers / limit);
+    const currentPage = page;
 
     return res.status(200).json({
       customers,
       totalPages,
       totalCustomers,
+      currentPage,
       status: "success",
       code: 200,
-      message: "Customers",
+      message: "Getting all customers successfully.",
     });
   } catch (error) {
     return res
       .status(500)
       .json({ error: error.message, code: 500, status: "error" });
+  }
+};
+
+exports.getChart = async (req, res) => {
+  try {
+    const results = await Results.find().sort({ createdAt: -1 });
+    const labels = results.map((result) => result.date);
+    const dailyMorningSales = dailyData(results, "morning");
+    const dailyEveningSales = dailyData(results, "evening");
+    const dailyMorningWin = dailyData(results, "morning_win");
+    const dailyEveningWin = dailyData(results, "evening_win");
+    const dailyNetwork = dailyData(results, "total");
+
+    return res.status(200).json({
+      labels: Array.from(new Set(labels)),
+      dailyMorningSales,
+      dailyEveningSales,
+      dailyMorningWin,
+      dailyEveningWin,
+      dailyNetwork,
+      message: "Getting Chart data successfully",
+      status: "success",
+      code: 200,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: error.message, code: 500, status: "error" });
+  }
+};
+
+exports.deleteAllResults = async (req, res) => {
+  try {
+    const { deletedCount } = await Results.deleteMany({});
+
+    if (deletedCount === 0) {
+      return res.status(404).json({
+        message: "No results found to delete.",
+        status: "error",
+        code: 404,
+      });
+    }
+
+    return res.status(200).json({
+      message: `Deleted ${deletedCount} results successfully.`,
+      status: "success",
+      code: 200,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+      code: 500,
+      status: "error",
+    });
   }
 };

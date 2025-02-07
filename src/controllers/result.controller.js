@@ -15,11 +15,13 @@ exports.getAllResults = async (req, res) => {
 
     const totalResults = await Result.countDocuments({});
     const totalPages = Math.ceil(totalResults / limit);
+    const currentPage = page;
 
     return res.status(200).json({
       results,
       totalPages,
       totalResults,
+      currentPage,
       status: "success",
       code: 200,
       message: "Results fetched successfully",
@@ -53,11 +55,13 @@ exports.getResultsByDate = async (req, res) => {
 
     const totalResults = await Result.countDocuments({ date });
     const totalPages = Math.ceil(totalResults / limit);
+    const currentPage = page;
 
     return res.status(200).json({
       results,
       totalPages,
       totalResults,
+      currentPage,
       status: "success",
       code: 200,
       message: "Results fetched successfully by date",
@@ -129,7 +133,6 @@ exports.searchResultsByName = async (req, res) => {
 
 exports.addResult = async (req, res) => {
   const { name, morning, evening, morning_win, evening_win } = req.body;
-
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -167,7 +170,7 @@ exports.addResult = async (req, res) => {
       evening_win,
       commission: customer.commission,
       gameX: customer.gameX,
-      total,
+      total: Math.round(total / 50) * 50,
       date: formattedDate,
       customer_details: customer._id,
     });
@@ -243,7 +246,7 @@ exports.updateResult = async (req, res) => {
     result.evening_win = evening_win;
     result.commission = customer.commission;
     result.gameX = customer.gameX;
-    result.total = total;
+    result.total = Math.round(total / 50) * 50;
     result.customer_details = customer._id;
 
     await result.save();

@@ -13,15 +13,6 @@ const calculateTotal = (
   commission = parseInt(commission);
   gameX = parseInt(gameX);
 
-  console.table({
-    morning,
-    evening,
-    morning_win,
-    evening_win,
-    commission,
-    gameX,
-  });
-
   const totalNetValue = morning + evening;
   const totalWinValue = morning_win + evening_win;
   const exceedCommission = totalNetValue * (commission / 100);

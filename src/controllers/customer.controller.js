@@ -67,6 +67,14 @@ exports.addCustomer = async (req, res) => {
     const today = new Date();
     const formattedDate = today.toLocaleDateString("en-GB");
 
+    const customerExists = await Customer.findOne({ name: name.toUpperCase() });
+
+    if (customerExists) {
+      return res
+        .status(409)
+        .json({ error: "Customer already exists", code: 409, status: "error" });
+    }
+
     const customer = new Customer({
       name: name.toUpperCase(),
       commission,

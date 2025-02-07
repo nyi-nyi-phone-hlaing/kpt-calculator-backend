@@ -11,4 +11,8 @@ router.get("/results", adminController.getAllResults);
 
 router.get("/customers", adminController.getAllCustomers);
 
+router.get("/chart", adminController.getChart);
+
+router.delete("/delete/all-results", adminController.deleteAllResults);
+
 module.exports = router;

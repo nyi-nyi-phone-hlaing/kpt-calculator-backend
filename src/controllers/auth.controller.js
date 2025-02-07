@@ -144,8 +144,6 @@ exports.deleteAccount = async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    console.table(decoded);
-
     if (decoded.role !== "Admin") {
       return res.status(401).json({
         error: "Access denied. Only admin allowed",
@@ -177,7 +175,7 @@ exports.deleteAccount = async (req, res) => {
 };
 
 exports.logout = async (req, res) => {
-  const { userId, token } = req.params;
+  const { id } = req.params;
 
   const errors = validationResult(req);
 
@@ -188,9 +186,19 @@ exports.logout = async (req, res) => {
   }
 
   try {
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ error: "User not found", code: 404, status: "error" });
+    }
+
+    const token = req.headers.authorization.split(" ")[1];
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (decoded.id !== userId) {
+    if (decoded.id !== id) {
       return res
         .status(401)
         .json({ error: "Unauthorized", code: 401, status: "error" });
@@ -220,5 +228,31 @@ exports.logout = async (req, res) => {
     return res
       .status(500)
       .json({ error: "Error logging out user", code: 500, status: "error" });
+  }
+};
+
+exports.currentUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password -__v");
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ error: "User not found", code: 404, status: "error" });
+    }
+
+    return res.status(200).json({
+      user,
+      status: "success",
+      code: 200,
+      message: "User fetched successfully",
+    });
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    return res.status(500).json({
+      error: "Error getting current user",
+      code: 500,
+      status: "error",
+    });
   }
 };
